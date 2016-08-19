@@ -6,39 +6,54 @@ var game = {};
 (function() {
 
     // Game properties.
-    var GAME_INTERVAL = 1 / 60;
-    var ONE_SECOND = 1000;
+    var GAME_INTERVAL = 1000 / 60;
 
     var DEFAULT = {
-        player: {
-            type: "player",
-            texture: "images/player.png",
-            id: {x:0, y:0},
+        default: {
             position: {x: 0, y: 0},
             velocity: {x: 0, y: 0},
+            size: {x: 0, y: 0},
+            enabled: true,
+            drawable: true,
+            visible: true,
+            collidable: true,
+            destroy: false
+        },
+        player: {
+            type: 'player',
+            texture: 'images/player.png',
+            id: -1,
             speed: 5,
             size: {x: 50, y:50},
-            destroy: false,
             update: updatePlayer
         },
         wall: {
-            type: "wall",
-            texture: "images/wall.png",
+            type: 'wall',
+            texture: 'images/wall.png',
             unitSize: {x: 50, y: 50},
             size: {x: 1, y: 1},
-            position: {x: 0, y: 0},
-            destroy: false
         },
         shot: {
             type: 'shot',
             texture: 'images/shot.png',
-            size: {x: 13, y: 13}
+            size: {x: 13, y: 13},
+            update: updateShot
+        },
+        camera: {
+            type: 'camera',
+            zoom: {x: 1, y: 1},
+            focus: null,
+            drawable: false,
+            ease: 5,
+            center: {x: 0, y: 0},
+            initalize: updateSize,
+            updateSize: updateSize,
+            update: updateCamera
         }
     }
 
     // Objects that update and draw.
-    var objects = {
-    };
+    var objects = {};
 
     // Objects that can be created.
 
@@ -50,8 +65,15 @@ var game = {};
      */
     function createObject(type, data) {
 
-        // Create the default player.
-        var object = copy(DEFAULT[type]);
+        // Create the default object.
+        var object = copy(DEFAULT[DEFAULT.default]);
+
+        // Add default properties for that type.
+        for(var prop in DEFAULT[type]) {
+            if(DEFAULT[type].hasOwnProperty(prop)) {
+                object[prop] = DEFAULT[type][prop];
+            }
+        }
 
         // Loop through and set assigned properties of the player.
         for(var prop in data) {
@@ -60,25 +82,74 @@ var game = {};
             }
         }
 
+        // Run object initalization code if there is any.
+        if(typeof object.initalize !== 'undefined') {
+            object.initalize();
+        }
+
         return object;
     }
 
     /**
      * Update function for a player.
+     * @param {int} deltaTime The amount of time since last update.
      */
-    function updatePlayer() {
-        console.log(this.id);
+    function updatePlayer(deltaTime) {
+        move(this, deltaTime);
     }
 
     /**
      * Update function for a shot.
+     * @param {int} deltaTime The amount of time since last update.
      */
-    function updateShot() {
-        console.log(this);
+    function updateShot(deltaTime) {
+        move(this, deltaTime);
+    }
+
+    /**
+     * Update function for a camera.
+     * @param {int} deltaTime The amount of time since last update.
+     */
+    function updateCamera(deltaTime) {
+
+        // If there is a focus object, move the camera towards it.
+        if(this.focus != null) {
+
+            this.velocity = {x: 0, y: 0};
+            var center = {
+                x: this.focus.size.x/2 - this.frame.x/2,
+                y: this.focus.size.y/2 - this.frame.y/2
+            }
+
+            this.position.x += ((this.focus.position.x + this.center.x) - this.position.x) / 
+                this.ease * delta / GAME_INTERVAL;
+
+            this.position.y += ((this.focus.position.y + this.center.y) - this.position.y) / 
+                this.ease * delta / GAME_INTERVAL;
+        }
+
+        // Move the camera by the velocitiy.
+        move(this, deltaTime);
+    }
+
+    /**
+     * Update function for a camera frame.
+     */
+    function updateSize() {
+
+        // If there is a focus object, update the center value.
+        if(this.focus != null) {
+            this.center = {
+                x: this.focus.size.x/2 - this.size.x/2,
+                y: this.focus.size.y/2 - this.size.y/2
+            }
+        }
     }
 
     /**
      * Copys an object and returns it.
+     * @param {object} object The object being copied.
+     * @return The copy of the object.
      */
     function copy(object) {
         return Object.assign({},object);
@@ -89,7 +160,7 @@ var game = {};
      * 
      * @param {object} position The position of the wall.
      * @param {object} size The size of the wall. Expected in units of walls.
-     * returns a new wall object.
+     * @return a new wall object.
      */
     function wall(position, size) {
 
@@ -111,40 +182,36 @@ var game = {};
         }
     }
 
-    /**
-     * Creates a vector with an x and y.
-     * @param {int} x The x value of the vector.
-     * @param {int} y The y value of the vector.
-     * returns a vector.
-     */
-    function vect(x,y) {
-        return {
-            x: x,
-            y: y
-        };
-    }
-
     // Functions that game objects can use.
 
     /**
      * Given that the passed in object has a velocitiy and position,
      * this function will move the player by its velocitiy.
      * @param {object} object The object being moved.
+     * @param {int} deltaTime The amount of time since last update.
      */
-    function move(object) {
-        object.position.x += object.velocitiy.x;
-        object.position.y += object.velocitiy.y;
+    function move(object, deltaTime) {
+        console.log(this);
+        object.position.x += (object.velocity.x * deltaTime / GAME_INTERVAL);
+        object.position.y += (object.velocity.y * deltaTime / GAME_INTERVAL);
+    }
+
+    /**
+     * Calculates the distance between two points.
+     * @param {object} posA Position A value.
+     * @param {object} posB Position B value.
+     */
+    function getDistance(posA, posB) {
+        return Math.sqrt(Math.pow(posB.x - posA.x, 2) + Math.pow(posB.y - posA.y, 2));
     }
 
     // Functions that run the game.
 
     /**
      * Loops through the objects and calls the update function.
+     * @param {int} deltaTime The amount of time since last update.
      */
-    function run(lastTime) {
-
-        // Get the current time.
-        var time = new Date();
+    function update(deltaTime) {
 
         // Loop through all the game objects.
         for(var prop in objects) {
@@ -163,19 +230,17 @@ var game = {};
 
                     // Update if there is an update function.
                     if(typeof object.update !== 'undefined') {
-                        object.update();
+                        object.update(deltaTime);
                     }
                 }
             }
         }
-
-        // Recall the update function.
-        setTimeout(function () {
-             run(time);
-        }, ONE_SECOND * GAME_INTERVAL);
     }
 
-    // Adds an object to the game objects list.
+    /**
+     * Adds an object to the game objects list.
+     * @param {object} object The object being added.
+     */ 
     function add(object) {
 
         // Create if not created.
@@ -195,12 +260,40 @@ var game = {};
         var spawns = map[1];
 
     }
+
+    /**
+     * Gets all objects that can be drawn.
+     * @return All the game objects that can be drawn.
+     */
+    function getDrawables() {
+
+        var drawables = [];
+
+         // Loop through all the game objects.
+        for(var prop in objects) {
+            if(objects.hasOwnProperty(prop)) {
+                var type = objects[prop];
+
+                // Loop through each object for the current type.
+                for(var i = type.length - 1; i >= 0; i--) {
+                    var object = type[i];
+
+                    // Add to drawables if drawable.
+                    if(object.drawable) {
+                        drawables.push(object);
+                    }
+                }
+            }
+        }
+
+        return drawables;
+    }
     
     // Creating the public connections from server/client to game.
-    game.run = run;
+    game.GAME_INTERVAL = GAME_INTERVAL;
+    game.getDrawables = getDrawables;
+    game.update = update;
     game.createMap = createMap;
     game.createObject = createObject;
-    game.vect = vect;
     game.add = add;
-
 })();
