@@ -1,4 +1,4 @@
-var connection;
+var game = {};
 
 /**
  * Anonymous function that runs the game script.
@@ -9,79 +9,82 @@ var connection;
     var GAME_INTERVAL = 1 / 60;
     var ONE_SECOND = 1000;
 
-    // Player properties.
-    var PLAYER_TYPE = "player";
-    var PLAYER_TEXTURE = "images/player.png";
-    var PLAYER_MAX_SPEED = 5;
-    var PLAYER_SIZE = {
-        x: 50,
-        y: 50
-    };
-    
-    // Wall properties.
-    var WALL_TYPE = "wall";
-    var WALL_TEXTURE = "images/wall.png";
-    var WALL_UNIT_SIZE = {
-        x: 50,
-        y: 50
-    };
+    var DEFAULT = {
+        player: {
+            type: "player",
+            texture: "images/player.png",
+            id: {x:0, y:0},
+            position: {x: 0, y: 0},
+            velocity: {x: 0, y: 0},
+            speed: 5,
+            size: {x: 50, y:50},
+            destroy: false,
+            update: updatePlayer
+        },
+        wall: {
+            type: "wall",
+            texture: "images/wall.png",
+            unitSize: {x: 50, y: 50},
+            size: {x: 1, y: 1},
+            position: {x: 0, y: 0},
+            destroy: false
+        },
+        shot: {
+            type: 'shot',
+            texture: 'images/shot.png',
+            size: {x: 13, y: 13}
+        }
+    }
 
     // Objects that update and draw.
-    var objects = [];
-    
-    // When the page is loaded, this is triggered.
-    document.addEventListener('DOMContentLoaded', function() {
-        var p = player(vect(0,0),0);
-        objects.push(p);
-
-        var w = wall(vect(0,0),vect(1,2));
-        objects.push(w);
-
-        run();
-    });
+    var objects = {
+    };
 
     // Objects that can be created.
 
     /**
-     * player
-     * Creates a player which can be controlled.
+     * Creates an object.
      * 
-     * @param {object} position The position of the player.
-     * @param {int} id The ID of the player.
-     * returns a new player object.
+     * @param {string} type The type of the object.
+     * @param {object} data The data of the object.
      */
-    function player(position, id) {
+    function createObject(type, data) {
 
-        // Player texture.
-        var texture = new Image();
-        texture.src = PLAYER_TEXTURE;
+        // Create the default player.
+        var object = copy(DEFAULT[type]);
 
-        // The update function of the player.
-        var update = function(object) {
-            move(object);
-        }
-        
-        // Create the player and return it.
-        var player = {
-            type: PLAYER_TYPE,
-            id: id,
-            position: position,
-            size: PLAYER_SIZE,
-            maxSpeed: PLAYER_MAX_SPEED,
-            velocitiy: {
-                x: 0,
-                y: 0
-            },
-            update: function() {
-                update(player)
+        // Loop through and set assigned properties of the player.
+        for(var prop in data) {
+            if(data.hasOwnProperty(prop)) {
+                object[prop] = data[prop];
             }
-        };
+        }
 
-        return player;
+        return object;
+    }
+
+    /**
+     * Update function for a player.
+     */
+    function updatePlayer() {
+        console.log(this.id);
+    }
+
+    /**
+     * Update function for a shot.
+     */
+    function updateShot() {
+        console.log(this);
+    }
+
+    /**
+     * Copys an object and returns it.
+     */
+    function copy(object) {
+        return Object.assign({},object);
     }
 
      /**
-     * wall
      * Creates a wall which interacts with other game objects.
      * 
      * @param {object} position The position of the wall.
@@ -109,7 +112,6 @@ var connection;
     }
 
     /**
-     * vect
      * Creates a vector with an x and y.
      * @param {int} x The x value of the vector.
      * @param {int} y The y value of the vector.
@@ -125,7 +127,6 @@ var connection;
     // Functions that game objects can use.
 
     /**
-     * move
      * Given that the passed in object has a velocitiy and position,
      * this function will move the player by its velocitiy.
      * @param {object} object The object being moved.
@@ -145,11 +146,27 @@ var connection;
         // Get the current time.
         var time = new Date();
 
-        console.log(time - lastTime);
-
         // Loop through all the game objects.
-        for(var i = 0; i < objects.length; i++) {
-            var object = objects[i];
+        for(var prop in objects) {
+            if(objects.hasOwnProperty(prop)) {
+                var type = objects[prop];
+
+                // Loop through each object for the current type.
+                for(var i = type.length - 1; i >= 0; i--) {
+                    var object = type[i];
+
+                    // Remove if destroy is true.
+                    if(object.destroy) {
+                        type.splice(i,1);
+                        continue;
+                    }
+
+                    // Update if there is an update function.
+                    if(typeof object.update !== 'undefined') {
+                        object.update();
+                    }
+                }
+            }
         }
 
         // Recall the update function.
@@ -158,12 +175,32 @@ var connection;
         }, ONE_SECOND * GAME_INTERVAL);
     }
 
+    // Adds an object to the game objects list.
+    function add(object) {
+
+        // Create if not created.
+        if(typeof objects[object.type] === 'undefined') {
+            objects[object.type] = [];
+        }
+
+        // Add the object.
+        objects[object.type].push(object);
+    }
+
     /**
-     * initalize
-     * Initalization for the game. Creates everything.
+     * Creates the map for the current game.
      */ 
-    function initalize() {
+    function createMap(map) {
+        var walls = map[0];
+        var spawns = map[1];
 
     }
     
+    // Creating the public connections from server/client to game.
+    game.run = run;
+    game.createMap = createMap;
+    game.createObject = createObject;
+    game.vect = vect;
+    game.add = add;
+
 })();
