@@ -18,6 +18,9 @@
         backgroundImg = new Image();
         backgroundImg.src = 'images/bg.png';
 
+        // Resize the canvas.
+        resizeCanvas();
+
         // Start the game.
         initalize();
     });
@@ -27,6 +30,7 @@
      */
     function initalize() {
         player = game.createObject("player");
+        console.log(player.position);
         camera = game.createObject("camera",{
             focus: player,
             size: {
@@ -34,6 +38,8 @@
                 y: canvas.height
             }
         });
+        console.log(player.position);
+
         game.add(player);
         game.add(camera);
         gameLoop();
@@ -53,7 +59,7 @@
      * @param {int} oldTime The time at the last frame of the game.
      */
     function gameLoop(oldTime) {
-
+        
         // First frame assumes delta time is game interval.
         if(typeof oldTime === 'undefined') {
             oldTime = new Date() - game.GAME_INTERVAL;
@@ -71,6 +77,8 @@
         },game.GAME_INTERVAL);
     }
 
+    var a = false;
+
     /**
      * Draws all game objects in the game.
      */
@@ -86,21 +94,45 @@
 
         // Loop through the drawable game objects.
         var objects = game.getDrawables();
-        for(var object in objects) {
-            if(objects.hasOwnProperty(object)) {
+        for(var i = 0; i < objects.length; i++) {
+            var object = objects[i];
 
-                // If the object is visible;
-                if(object.visible) {
+            // If the object is visible;
+            if(object.visible) {
 
-                    // Calculate canvas position based on camera.
-                    var x = object.position.x - camera.position.x;
-                    var y = object.position.y - camera.position.y;
+                // Calculate canvas position based on camera.
+                var x = object.position.x - camera.position.x;
+                var y = object.position.y - camera.position.y;
 
-                    // Draw the image.
-                    context.drawImage(object.texture, x, y, object.size.x, object.size.y);
-                }
+                if(!a)console.log([camera]);a = true;
+
+                // Draw the image.
+                context.drawImage(object.texture, x, y, object.size.x, object.size.y);
             }
         }
+    }
 
-    };
+    /**
+     * Resizes the canvas to fit the window.
+     * Also updates the camera to match the change.
+     */
+    function resizeCanvas() {
+
+        // Set the canvas width and height.
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // Update the camera if it is set.
+        if(typeof camera !== 'undefined') {
+
+            // Set the camera size.
+            camera.size = {
+                x: canvas.width,
+                y: canvas.height
+            };
+
+            // Update the center location of the camera.
+            camera.updateSize();
+        }
+    }
 })();

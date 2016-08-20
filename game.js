@@ -66,12 +66,18 @@ var game = {};
     function createObject(type, data) {
 
         // Create the default object.
-        var object = copy(DEFAULT[DEFAULT.default]);
+        var object = copy(DEFAULT.default);
 
         // Add default properties for that type.
         for(var prop in DEFAULT[type]) {
             if(DEFAULT[type].hasOwnProperty(prop)) {
-                object[prop] = DEFAULT[type][prop];
+
+                // Add value if not object, copy if it is.
+                if(typeof DEFAULT[type][prop] !== 'object') {
+                    object[prop] = DEFAULT[type][prop];
+                } else {
+                    object[prop] = copy(DEFAULT[type][prop]);
+                }
             }
         }
 
@@ -85,6 +91,13 @@ var game = {};
         // Run object initalization code if there is any.
         if(typeof object.initalize !== 'undefined') {
             object.initalize();
+        }
+
+        // Set the texture as an image, if there is a texture.
+        if(typeof object.texture !== 'undefined') {
+            var image = new Image();
+            image.src = object.texture;
+            object.texture = image;
         }
 
         return object;
@@ -114,18 +127,13 @@ var game = {};
 
         // If there is a focus object, move the camera towards it.
         if(this.focus != null) {
-
             this.velocity = {x: 0, y: 0};
-            var center = {
-                x: this.focus.size.x/2 - this.frame.x/2,
-                y: this.focus.size.y/2 - this.frame.y/2
-            }
-
+            
             this.position.x += ((this.focus.position.x + this.center.x) - this.position.x) / 
-                this.ease * delta / GAME_INTERVAL;
+                this.ease * deltaTime / GAME_INTERVAL;
 
             this.position.y += ((this.focus.position.y + this.center.y) - this.position.y) / 
-                this.ease * delta / GAME_INTERVAL;
+                this.ease * deltaTime / GAME_INTERVAL;
         }
 
         // Move the camera by the velocitiy.
@@ -152,7 +160,25 @@ var game = {};
      * @return The copy of the object.
      */
     function copy(object) {
-        return Object.assign({},object);
+
+        // Object that will be returned.
+        var result = {};
+
+        // Loop through and add each property to the object.
+        for(var prop in object) {
+            if(object.hasOwnProperty(prop)) {
+
+                // If the value isn't an object.
+                if(typeof object[prop] !== 'object') {
+                    result[prop] = object[prop];
+                } else {
+                    result[prop] = copy(object[prop]);
+                }
+            }
+        }
+
+        // Return the result.
+        return result;
     }
 
      /**
@@ -191,7 +217,6 @@ var game = {};
      * @param {int} deltaTime The amount of time since last update.
      */
     function move(object, deltaTime) {
-        console.log(this);
         object.position.x += (object.velocity.x * deltaTime / GAME_INTERVAL);
         object.position.y += (object.velocity.y * deltaTime / GAME_INTERVAL);
     }
