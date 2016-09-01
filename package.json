@@ -1,0 +1,11 @@
+{
+    "name": "game",
+    "version": "1.0.0",
+    "description": "",
+    "dependencies": {
+        "socket.io": "latest",
+        "express": "latest",
+        "shortid": "latest"
+    },
+    "author": "Jeremy Buick"
+}
