@@ -1,3 +1,6 @@
+/**
+ * Anonymous function that runs the client script.
+ */
 (function() {
 
     // Used in the drawing of the game.
@@ -11,13 +14,14 @@
     var player;
     var camera;
 
+    // This is how the client interacts with the game.
     var game;
 
     // When the client loads, start initalization and game.
     document.addEventListener("DOMContentLoaded",function() {
-        
+
         // Create a connection to the game object.
-        game = gameStarter.start();
+        game = startGame.start();
 
         // Get the canvas.
         canvas = document.getElementById('canvas');
@@ -113,9 +117,21 @@
 
                 // Draw the image.
                 context.drawImage(object.texture, x, y, object.size.x, object.size.y);
-                applyColor(object, x, y);
+                if(isColored(object)) {
+                    applyColor(object, x, y);
+                }
             }
         }
+    }
+
+    /**
+     * Checks if there is a color applied to an object.
+     * 
+     * @param {object} object The drawable object being checked if colored.
+     * @return True if the object has a color applied to it.
+     */
+    function isColored(object) {
+        return object.color.r != 128 && object.color.b != 128 && object.color.g != 128;
     }
 
     /**

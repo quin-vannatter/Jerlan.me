@@ -1,12 +1,16 @@
-var gameStarter = {};
+
+// Holds the start function used to start the game.
+var startGame;
 
 /**
- * Anonymous function that runs the game script.
+ * Function that runs the game script.
  */
 (function() {
 
     // Add the start ability to the game object.
-    gameStarter.start = start;
+    startGame = {
+        start: start
+    };
 
     // Game properties.
     var GAME_INTERVAL = 1000 / 60;
@@ -22,7 +26,8 @@ var gameStarter = {};
             visible: true,
             collidable: true,
             destroy: false,
-            color: {r: 0, b:0, g:0}
+            ignoreCollide: [],
+            color: {r: 128, b:128, g:128}
         },
         player: {
             type: 'player',
@@ -30,7 +35,7 @@ var gameStarter = {};
             id: -1,
             speed: 5,
             size: {x: 50, y:50},
-            color: {r: 0, b:225, g:223},
+            color: {r: 60, b:20, g:100},
             update: updatePlayer
         },
         wall: {
@@ -61,13 +66,13 @@ var gameStarter = {};
     /**
      * Creates a connection to the game object so interaction can be done.
      * 
+     * @param {function} startGame The start game object invoking this function.
+     * @return The game object for the current game.
      */
     function start() {
 
         // Remove the ability to start the game again.
-        gameStarter.start = null;
-
-        console.log(game);
+        this.start = undefined;
 
         // Return a connection to the game object.
         return game;
@@ -284,6 +289,22 @@ var gameStarter = {};
     }
 
     /**
+     * Gets the player with the given id.
+     * 
+     * @param {int} id The id of the player being searched.
+     * @return The player with the given id. Returns null if one isn't found.
+     */
+    function getPlayer(id) {
+        for(var i = 0; i < objects.player.length; i++) {
+            var player = objects.player[i];
+            if(player.id == id) {
+                return player;
+            }
+        }
+        return null;
+    }
+
+    /**
      * Adds an object to the game objects list.
      * @param {object} object The object being added.
      */ 
@@ -342,4 +363,11 @@ var gameStarter = {};
     game.createMap = createMap;
     game.createObject = createObject;
     game.add = add;
+
+    // If this is a server connection.
+    if(typeof global !== 'undefined') {
+
+        // Set the module export to the start function.
+        module.exports = startGame;
+    }
 })();

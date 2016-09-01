@@ -31,12 +31,6 @@ app.all('/', function(req, res, next) {
   next();
  });
 
-// Include the script for the game.
-var gameJS = new require('./public/game.js');
-
-/**
- * Anonymous function that runs the server script.
- */
-(function() {
-
-})();
+var startGame = new require('./public/game.js');
+startGame.start();
+console.log(typeof startGame.start);
