@@ -1,10 +1,3 @@
-
-var TEST = {
-    r: false,
-    b: false,
-    g: false
-};
-
 (function() {
 
     // Used in the drawing of the game.
@@ -18,8 +11,13 @@ var TEST = {
     var player;
     var camera;
 
+    var game;
+
     // When the client loads, start initalization and game.
     document.addEventListener("DOMContentLoaded",function() {
+        
+        // Create a connection to the game object.
+        game = gameStarter.start();
 
         // Get the canvas.
         canvas = document.getElementById('canvas');
@@ -115,12 +113,6 @@ var TEST = {
 
                 // Draw the image.
                 context.drawImage(object.texture, x, y, object.size.x, object.size.y);
-                object.color.r += TEST.r ? 1 : -1;
-                object.color.b += TEST.b ? 1 : -1;
-                object.color.g += TEST.g ? 1 : -1;
-                if(object.color.g > 255 || object.color.g < 0) TEST.g = !TEST.g;
-                if(object.color.r > 255 || object.color.r < 0) TEST.r = !TEST.r;
-                if(object.color.b > 255 || object.color.b < 0) TEST.b = !TEST.b;
                 applyColor(object, x, y);
             }
         }
@@ -129,6 +121,8 @@ var TEST = {
     /**
      * Applys the color property to the object.
      * @param {object} object The drawable object that will have the color applied.
+     * @param {int} x The x location of the image being changed.
+     * @param {int} y The y location of the image being changed.
      */
     function applyColor(object, x, y) {
         var color = object.color;

@@ -1,12 +1,16 @@
-var game = {};
+var gameStarter = {};
 
 /**
  * Anonymous function that runs the game script.
  */
 (function() {
 
+    // Add the start ability to the game object.
+    gameStarter.start = start;
+
     // Game properties.
     var GAME_INTERVAL = 1000 / 60;
+    var game = {};
 
     var DEFAULT = {
         default: {
@@ -26,7 +30,7 @@ var game = {};
             id: -1,
             speed: 5,
             size: {x: 50, y:50},
-            color: {r: 110, b:200, g:34},
+            color: {r: 0, b:225, g:223},
             update: updatePlayer
         },
         wall: {
@@ -52,6 +56,21 @@ var game = {};
             updateSize: updateSize,
             update: updateCamera
         }
+    }
+
+    /**
+     * Creates a connection to the game object so interaction can be done.
+     * 
+     */
+    function start() {
+
+        // Remove the ability to start the game again.
+        gameStarter.start = null;
+
+        console.log(game);
+
+        // Return a connection to the game object.
+        return game;
     }
 
     // Objects that update and draw.
