@@ -124,11 +124,15 @@ var startGame;
         // Set the texture as an image, if there is a texture.
         if(typeof object.texture !== 'undefined') {
             var image = new Image();
+            var drawImage = new Image();
+            drawImage.src = object.texture;
             image.src = object.texture;
             object.texture = image;
-            object.imageData = {
-                data: null,
-                color: copy(object.color)
+            object.drawTexture = drawImage;
+            object.colorOld = {
+                r: -1,
+                b: -1,
+                g: -1
             };
             object.ready = false;
             object.texture.onload = function() {

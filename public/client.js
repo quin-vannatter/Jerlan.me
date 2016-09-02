@@ -201,6 +201,9 @@
             }
         }));
         player = game.createObject("player");
+        game.add(game.createObject("shot",{
+            color: player.color
+        }));
         camera = game.createObject("camera",{
             focus: player,
             size: {
@@ -220,6 +223,8 @@
      */
     function update(deltaTime) {
         game.update(deltaTime);
+        player.color.r++;
+        if(player.color.r>255) player.color.r = 0;
         draw();
     }
 
@@ -299,16 +304,11 @@
                 var x = object.position.x - camera.position.x;
                 var y = object.position.y - camera.position.y;
 
-                if(object.imageData.data == null || !colorsMatch(object.imageData.color,object.color)) {
-
-                    // Draw and color the image.
-                    context.drawImage(object.texture, 0, 0, object.size.x, object.size.y);
-                    applyColor(object, 0, 0);
-                } else {
-
-                    // Just draw the previous pixels.
-                    context.putImageData(object.imageData.data, x, y);
+                if(!colorsMatch(object.colorOld,object.color)) {
+                    applyColor(object);
                 }
+                
+                context.drawImage(object.drawTexture, x, y, object.size.x, object.size.y);
             }
         }
     }
@@ -327,11 +327,19 @@
      * @param {object} object The drawable object that will have the color applied.
      * @param {int} x The x location of the image being changed.
      * @param {int} y The y location of the image being changed.
+     * @param {object} context The context in which to draw the image.
      */
-    function applyColor(object, x, y) {
+    function applyColor(object) {
+
+        // Canvas that will be drawn on.
+        var canvas = document.createElement('canvas');
+        var context = canvas.getContext('2d');
+        canvas.width = object.size.x;
+        canvas.height = object.size.y;
         var color = object.color;
 
-        // Color being applied must be applied to an image with grey scale to work properly.
+        // Start with an image on the canvas.
+        context.drawImage(object.texture,0,0,object.size.x,object.size.y);
 
         // Create a percentage from -100% to 100% to act as the increase to the current value of a pixel.
         var percentage = {
@@ -341,7 +349,7 @@
         }
 
         // Get the image data of the image that was just drawn.
-        var imageData = context.getImageData(x, y, object.size.x, object.size.y);
+        var imageData = context.getImageData(0, 0, object.size.x, object.size.y);
         var length = object.size.x * object.size.y * 4;
 
         // If the data is not undefined.
@@ -358,7 +366,7 @@
                 imageData.data[i] = Math.min(imageData.data[i],256 - imageData.data[i]) * percentage.r + imageData.data[i];
                 imageData.data[i + 1] = Math.min(imageData.data[i + 1], 256-imageData.data[i + 1]) * percentage.g + imageData.data[i + 1];
                 imageData.data[i + 2] = Math.min(imageData.data[i + 2], 256-imageData.data[i + 2]) * percentage.b + imageData.data[i + 2];
-
+                
                 // If any pixel values go past 0 or 255, apply the difference to the other two pixel values.
                 // Eg. a red pixel of 265 would become 255 while blue and green would increase by 10.
                 if(imageData.data[i] > 255) {
@@ -396,12 +404,12 @@
             }
         }
 
-        // Set the color and image data of the object.
-        object.imageData.data = imageData;
-        object.imageData.color = game.copy(object.color);
+        // Redraw the image.
+        context.putImageData(imageData,0,0);
 
-        // Apply the changes to the context.
-        context.putImageData(imageData, x, y);
+        // Set the color and texture of the object.
+        object.drawTexture.src = canvas.toDataURL('image/png');
+        object.colorOld = game.copy(object.color);
     }
 
     /**
