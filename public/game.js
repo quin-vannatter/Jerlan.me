@@ -42,7 +42,9 @@ var startGame;
             type: 'wall',
             texture: 'images/wall.png',
             unitSize: {x: 50, y: 50},
+            color: {r: 50, b:100, g:0},
             size: {x: 1, y: 1},
+            initalize: initalizeWall
         },
         shot: {
             type: 'shot',
@@ -57,8 +59,8 @@ var startGame;
             drawable: false,
             ease: 5,
             center: {x: 0, y: 0},
-            initalize: updateSize,
-            updateSize: updateSize,
+            initalize: updateCameraSize,
+            updateSize: updateCameraSize,
             update: updateCamera
         }
     }
@@ -124,9 +126,27 @@ var startGame;
             var image = new Image();
             image.src = object.texture;
             object.texture = image;
+            object.imageData = {
+                data: null,
+                color: copy(object.color)
+            };
+            object.ready = false;
+            object.texture.onload = function() {
+                object.ready = true;
+            }
         }
 
         return object;
+    }
+
+    /**
+     * Sets the size of the wall to be proper.
+     */
+    function initalizeWall() {
+        this.size = {
+            x: this.size.x * this.unitSize.x,
+            y: this.size.y * this.unitSize.y
+        };
     }
 
     /**
@@ -169,7 +189,7 @@ var startGame;
     /**
      * Update function for a camera frame.
      */
-    function updateSize() {
+    function updateCameraSize() {
 
         // If there is a focus object, update the center value.
         if(this.focus != null) {
@@ -358,6 +378,7 @@ var startGame;
     
     // Creating the public connections from server/client to game.
     game.GAME_INTERVAL = GAME_INTERVAL;
+    game.copy = copy;
     game.getDrawables = getDrawables;
     game.update = update;
     game.createMap = createMap;

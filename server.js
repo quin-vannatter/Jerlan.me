@@ -32,5 +32,4 @@ app.all('/', function(req, res, next) {
  });
 
 var startGame = new require('./public/game.js');
-startGame.start();
-console.log(typeof startGame.start);
+var game = startGame.start();
